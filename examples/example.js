@@ -77,24 +77,27 @@
             });
         }
 
-        function addLayer(name) {
-            var workspace = 'geonode';
-            var parts = name.split(':');
-            if (parts.length > 1) {
-                workspace = parts[0];
-                name = parts[1];
+        function addLayer(name, asVector) {
+            if (asVector === true) {
+            } else {
+                var workspace = 'geonode';
+                var parts = name.split(':');
+                if (parts.length > 1) {
+                    workspace = parts[0];
+                    name = parts[1];
+                }
+                var url = '/geoserver/' + workspace + '/' + name + '/wms';
+                // @todo use urls for subdomain loading
+                var source = new ol.source.TileWMS({
+                    url: url,
+                    params: {'LAYERS': name, 'VERSION': '1.1.0', 'TILED': true},
+                    serverType: 'geoserver'
+                });
+                var layer = new ol.layer.Tile({source: source, name: name});
+                return loadCapabilities(layer).then(function() {
+                    map.addLayer(layer);
+                });
             }
-            var url = '/geoserver/' + workspace + '/' + name + '/wms';
-            // @todo use urls for subdomain loading
-            var source = new ol.source.TileWMS({
-                url: url,
-                params: {'LAYERS': name, 'VERSION': '1.1.0', 'TILED': true},
-                serverType: 'geoserver'
-            });
-            var layer = new ol.layer.Tile({source: source, name: name});
-            return loadCapabilities(layer).then(function() {
-                map.addLayer(layer);
-            });
         }
 
         function createControls(data) {
@@ -131,7 +134,7 @@
         });
         $scope.addLayer = function () {
             $scope.loading = true;
-            timeControlsService.addLayer($scope.layerName).then(function () {
+            timeControlsService.addLayer($scope.layerName, $scope.asVector).then(function () {
                 if ($scope.timeControls === null) {
                     $scope.timeControls = timeControlsService.createControls();
                 }
